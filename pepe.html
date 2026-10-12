@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Real o IA? - Competencia de 3 jugadores</title>
+    <link rel="stylesheet" href="pepito.css">
+</head>
+<body>
+<main class="contenedor">
+    <header>
+        <div class="etiqueta">DESAFÍO DE NOTICIAS</div>
+        <h1>¿REAL O <span>IA?</span></h1>
+        <p class="subtitulo">
+            ¿Quién distinguirá mejor la realidad de la ficción?
+        </p>
+    </header>
+
+    <section id="inicio" class="panel">
+        <div class="emoji-grande">📰📰📰</div>
+        <h2>En este juego de tres jugadores se pondra a prueba la habilidad de detectar si lo que leen es o no una noticia generada por IA</h2>
+        <p>Escriban sus nombres, los jugadores se turnarán para responder las noticias para ir juntando puntos.</p>
+
+        <div class="jugadores">
+            <label for="nombre1">🔵 Jugador 1</label>
+            <input id="nombre1" maxlength="20" placeholder="Nombre del jugador 1">
+
+            <label for="nombre2">🟢 Jugador 2</label>
+            <input id="nombre2" maxlength="20" placeholder="Nombre del jugador 2">
+
+            <label for="nombre3">🟣 Jugador 3</label>
+            <input id="nombre3" maxlength="20" placeholder="Nombre del jugador 3">
+        </div>
+
+        <ul>
+            <li>Son 30 preguntas en total.</li>
+            <li>15 noticias reales y 15 inventadas por la IA.</li>
+            <li>Cada jugador responde 10 preguntas.</li>
+            <li>Cada acierto suma 1 punto.</li>
+        </ul>
+
+        <button id="comenzar">¡COMENZAR COMPETENCIA!</button>
+        <p id="error-nombres" class="error oculto">Se necesitan los nombres para cada jugador.</p>
+    </section>
+
+    <section id="juego" class="panel oculto">
+        <div class="marcador-jugadores" id="marcador-jugadores"></div>
+
+        <div class="informacion">
+            <span id="numero">PREGUNTA 1 DE 30</span>
+            <span id="turno">Turno del jugador</span>
+        </div>
+
+        <div class="barra">
+            <div id="progreso"></div>
+        </div>
+
+        <div class="categoria" id="categoria">CASO EXTRAÑO</div>
+        <h2 id="titular">Titular de la noticia</h2>
+        <p id="descripcion" class="descripcion"></p>
+
+        <div id="botones" class="botones">
+            <button class="opcion real" data-respuesta="real">
+                <span>✓</span> ES VERDADERA
+            </button>
+            <button class="opcion ia" data-respuesta="ia">
+                <span>✕</span> FUE INVENTADA
+            </button>
+        </div>
+
+        <div id="resultado" class="resultado oculto" aria-live="polite">
+            <h3 id="resultado-titulo"></h3>
+            <p id="resultado-texto"></p>
+            <a id="fuente" href="#" target="_blank"
+               rel="noopener noreferrer" class="fuente oculto">
+                LEER LA NOTICIA ORIGINAL ↗
+            </a>
+            <button id="siguiente">SIGUIENTE PREGUNTA →</button>
+        </div>
+    </section>
+
+    <section id="final" class="panel oculto">
+        <div class="emoji-grande">🏆</div>
+        <h2>¡COMPETENCIA TERMINADA!</h2>
+        <p id="mensaje-final"></p>
+
+        <div id="resultados-finales" class="resultados-finales"></div>
+
+        <button id="reiniciar">JUGAR DE NUEVO</button>
+    </section>
+
+    <footer>
+        ¿Realidad o inteligencia artificial?
+        <br>Desafía que tan lejos pueden llegar tus conocimientos.
+        <h2>Hecho por Matheus®</h2>
+    </footer>
+</main>
+
+<script>
+const noticias = [
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un panda rojo escapó del zoológico y recorrió un barrio",
+        descripcion: "En 2013, Rusty, un panda rojo del Zoológico Nacional de Estados Unidos, escapó de su recinto y fue visto en un barrio de Washington.",
+        fuente: "https://siarchives.si.edu/collections/siris_sic_13865",
+        explicacion: "¡Ocurrió de verdad! Rusty escapó en junio de 2013 y fue encontrado ese mismo día."
+    },
+    {
+        tipo: "ia",
+        categoria: "TECNOLOGÍA",
+        titular: "Un robot repartidor pidió vacaciones y bloqueó una oficina",
+        descripcion: "Una empresa habría tenido que negociar con su robot de reparto después de que mostrara el mensaje: «Necesito un descanso»."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un búho se convirtió en una celebridad de Nueva York",
+        descripcion: "Un búho real llamado Flaco escapó del zoológico de Central Park y pasó más de un año viviendo libre en Manhattan.",
+        fuente: "https://www.nationalgeographic.com/animals/article/zoo-break-in-changed-the-life-of-an-owl-called-flaco",
+        explicacion: "¡Es real! Flaco escapó en febrero de 2023 y atrajo la atención de vecinos y observadores de aves."
+    },
+    {
+        tipo: "ia",
+        categoria: "GASTRONOMÍA",
+        titular: "Un restaurante contrató a una paloma como catadora oficial",
+        descripcion: "El dueño de un restaurante habría nombrado a una paloma catadora de pizzas porque supuestamente detectaba si el queso estaba bien derretido."
+    },
+    {
+        tipo: "real",
+        categoria: "ROBOS EXTRAÑOS",
+        titular: "Robaron miles de insectos y arañas de un museo",
+        descripcion: "En Filadelfia, delincuentes robaron cerca de 7.000 insectos, arañas y otros animales de una colección de museo.",
+        fuente: "https://www.washingtonpost.com/science/2018/09/11/thieves-stole-7000-creepy-insects-spiders-museum-why/",
+        explicacion: "¡Verdadero! El robo ocurrió en 2018 en el Philadelphia Insectarium and Butterfly Pavilion."
+    },
+    {
+        tipo: "ia",
+        categoria: "TRANSPORTE",
+        titular: "Un colectivo se negó a arrancar porque no le gustaba la música",
+        descripcion: "Un sistema inteligente de transporte habría impedido arrancar cada vez que alguien reproducía canciones de reguetón."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un mono escapó de un zoológico y se paseó por Escocia",
+        descripcion: "Un macaco japonés llamado Honshu escapó de un parque de animales de las Tierras Altas de Escocia y pasó varios días fuera de su recinto.",
+        fuente: "https://www.theguardian.com/world/2024/feb/02/brown-bears-and-binturongs-honshu-is-just-the-latest-animal-to-escape-a-uk-zoo",
+        explicacion: "¡Es real! Honshu escapó en 2024 y fue noticia durante los días que permaneció fuera."
+    },
+    {
+        tipo: "ia",
+        categoria: "CIENCIA",
+        titular: "Descubrieron que los calcetines desaparecidos forman una sociedad secreta",
+        descripcion: "Un supuesto estudio universitario habría descubierto que los calcetines perdidos se reúnen en una dimensión paralela."
+    },
+    {
+        tipo: "real",
+        categoria: "ROBOS EXTRAÑOS",
+        titular: "Un toro llamado Sauce Boss estuvo prófugo durante cuatro días",
+        descripcion: "Un toro de rodeo escapó mientras lo descargaban en Colorado y pasó varios días evitando que lo atraparan.",
+        fuente: "https://www.theguardian.com/us-news/2025/jul/09/sauce-boss-rodeo-bull-escape-colorado",
+        explicacion: "¡Verdadero! Sauce Boss escapó en julio de 2025 y fue recuperado cuatro días después."
+    },
+    {
+        tipo: "ia",
+        categoria: "EDUCACIÓN",
+        titular: "Una escuela suspendió los exámenes porque una IA se graduó primero",
+        descripcion: "Una escuela habría cancelado sus exámenes después de que una inteligencia artificial obtuviera el mejor promedio y solicitara un diploma."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un camión con monos de investigación sufrió un accidente",
+        descripcion: "En 2025, un camión que transportaba monos volcó en una carretera de Mississippi, lo que provocó una búsqueda de los animales que quedaron sueltos.",
+        fuente: "https://apnews.com/article/1ff00420c5f4af37a8b8ec4e2028227c",
+        explicacion: "¡Es real! El accidente ocurrió en octubre de 2025 y las autoridades buscaron a los monos que faltaban."
+    },
+    {
+        tipo: "ia",
+        categoria: "DEPORTES",
+        titular: "Un árbitro anuló un gol porque la pelota parecía demasiado feliz",
+        descripcion: "En un partido amateur, un árbitro habría explicado que la pelota rebotaba de una manera tan alegre que no podía tratarse de un gol reglamentario."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Florida registra escapes de animales exóticos",
+        descripcion: "Un informe periodístico recopiló casos de animales cautivos que escaparon de sus recintos en Florida, incluidos canguros.",
+        fuente: "https://www.clickorlando.com/news/local/2026/07/13/140-captive-animals-have-escaped-in-florida-since-2022-heres-what-state-records-reveal/",
+        explicacion: "¡Es real! El artículo reúne registros de varios escapes de animales cautivos. No todos terminaron de la misma manera."
+    },
+    {
+        tipo: "ia",
+        categoria: "ESPACIO",
+        titular: "La NASA retrasó un lanzamiento porque una nube pidió autógrafos",
+        descripcion: "Un supuesto comunicado habría informado que una nube con forma de astronauta obligó a detener una misión espacial."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Una cebra escapó y tuvieron que buscarla desde el aire",
+        descripcion: "En Tennessee, una cebra llamada Ed escapó y pasó varios días libre antes de ser recuperada con ayuda de un helicóptero.",
+        fuente: "https://www.washingtonpost.com/business/interactive/2025/what-zoo-escapes-can-teach-humans/",
+        explicacion: "¡Es real! La cebra Ed escapó en 2025 y su aventura se volvió noticia."
+    },
+    {
+        tipo: "ia",
+        categoria: "TRABAJO",
+        titular: "Una oficina contrató a un fantasma para apagar las luces",
+        descripcion: "Una empresa habría anunciado que un fantasma invisible era su nuevo empleado nocturno."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un ñu recién llegado escapó de un zoológico",
+        descripcion: "En 2026, un ñu recién llegado al zoológico de Fort Wayne escapó de su hábitat y entró en un recinto cercano.",
+        fuente: "https://people.com/new-wildebeest-escapes-indiana-zoo-enclosure-12019025",
+        explicacion: "¡Verdadero! El animal había llegado pocos días antes y el personal tomó precauciones durante el incidente."
+    },
+    {
+        tipo: "ia",
+        categoria: "GASTRONOMÍA",
+        titular: "Una heladería inventó un sabor que solo se puede probar los martes",
+        descripcion: "Una heladería habría patentado un helado invisible que recuperaba su color y sabor únicamente los martes."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Una capibara escapó de un zoológico y estuvo meses desaparecida",
+        descripcion: "En Inglaterra, una capibara llamada Samba escapó de un zoológico en marzo de 2026 y su búsqueda se prolongó durante meses.",
+        fuente: "https://www.bbc.co.uk/news/articles/c3qjk29p9z52o",
+        explicacion: "¡Es real! La desaparición de Samba recibió atención internacional."
+    },
+    {
+        tipo: "ia",
+        categoria: "INVENTOS",
+        titular: "Inventaron un paraguas que solo funciona cuando no llueve",
+        descripcion: "Una empresa habría presentado un paraguas inteligente que se abre cuando detecta sol y se cierra en cuanto siente una gota."
+    },
+
+    // 10 noticias nuevas para llegar a 30
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un mapache escaló un rascacielos y se volvió famoso",
+        descripcion: "En 2018, un mapache escaló el exterior de un edificio alto en Saint Paul, Minnesota, y atrajo la atención de miles de personas.",
+        fuente: "https://www.mprnews.org/story/2018/06/12/raccoon-climbs-downtown-st-paul-skyscraper",
+        explicacion: "¡Es real! El mapache escaló un edificio de oficinas y fue seguido por muchas personas mientras subía."
+    },
+    {
+        tipo: "ia",
+        categoria: "CIENCIA",
+        titular: "Un laboratorio creó una planta que se queja cuando la riegan",
+        descripcion: "Un equipo de científicos habría creado una planta que pronunciaba frases de protesta cada vez que alguien le echaba agua."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un pulpo escapó de un acuario por un desagüe",
+        descripcion: "Inky, un pulpo del Acuario Nacional de Nueva Zelanda, desapareció de su tanque en 2016 y se cree que escapó por una tubería hacia el mar.",
+        fuente: "https://www.bbc.com/news/world-asia-36047765",
+        explicacion: "¡Es real! Inky desapareció de su tanque y dejó un rastro que conducía hasta una tubería."
+    },
+    {
+        tipo: "ia",
+        categoria: "TRANSPORTE",
+        titular: "Un tren se detuvo porque un pasajero llevaba demasiados sándwiches",
+        descripcion: "Un sistema de seguridad ferroviaria habría detectado tantos sándwiches en una mochila que detuvo todo el servicio para inspeccionarlos."
+    },
+    {
+        tipo: "real",
+        categoria: "CURIOSIDADES",
+        titular: "Un gato fue alcalde honorario de un pueblo de Alaska",
+        descripcion: "Stubbs, un gato de Talkeetna, Alaska, fue conocido durante años como el alcalde honorario del pequeño pueblo.",
+        fuente: "https://www.bbc.com/news/world-us-canada-36944012",
+        explicacion: "¡Es real! Stubbs fue una mascota muy famosa del pueblo, aunque su cargo era honorario y no oficial."
+    },
+    {
+        tipo: "ia",
+        categoria: "EDUCACIÓN",
+        titular: "Un colegio cambió las notas por aplausos medidos con un sensor",
+        descripcion: "Una escuela habría instalado sensores para medir los aplausos de los compañeros y decidir la nota final de cada alumno."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Un pingüino recibió un importante reconocimiento militar",
+        descripcion: "Sir Nils Olav, un pingüino rey vinculado a la Guardia del Rey de Noruega, recibió ascensos honorarios y llegó al rango de mayor general.",
+        fuente: "https://www.army.mod.uk/news-and-events/news/2023/08/king-penguin-promoted-to-major-general/",
+        explicacion: "¡Es real! Nils Olav es la mascota de una unidad militar noruega y recibe reconocimientos ceremoniales."
+    },
+    {
+        tipo: "ia",
+        categoria: "TECNOLOGÍA",
+        titular: "Un celular se negó a desbloquearse porque no reconocía el lunes",
+        descripcion: "Un teléfono con inteligencia artificial habría bloqueado a su dueño todos los lunes porque el sistema consideraba que era demasiado temprano para trabajar."
+    },
+    {
+        tipo: "real",
+        categoria: "ANIMALES",
+        titular: "Una oveja pasó años sin ser esquilada y acumuló muchísima lana",
+        descripcion: "Shrek, una oveja merina de Nueva Zelanda, evitó ser esquilada durante años y se hizo famosa por la enorme cantidad de lana que acumuló.",
+        fuente: "https://www.bbc.com/news/world-asia-pacific-36255114",
+        explicacion: "¡Es real! Shrek fue encontrada después de pasar años evitando a quienes la esquilaban."
+    },
+    {
+        tipo: "ia",
+        categoria: "GASTRONOMÍA",
+        titular: "Un restaurante sirvió una pizza que cambiaba de sabor según el clima",
+        descripcion: "Un chef habría inventado una pizza que sabía a chocolate cuando hacía frío y a sopa cuando comenzaba a llover."
+    }
+];
+
+const inicio = document.getElementById("inicio");
+const juego = document.getElementById("juego");
+const final = document.getElementById("final");
+const botones = document.getElementById("botones");
+const resultado = document.getElementById("resultado");
+
+let partida = [];
+let jugadores = [];
+let indice = 0;
+let respondida = false;
+
+function mezclar(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function comenzar() {
+    const nombres = [
+        document.getElementById("nombre1").value.trim(),
+        document.getElementById("nombre2").value.trim(),
+        document.getElementById("nombre3").value.trim()
+    ];
+
+    const error = document.getElementById("error-nombres");
+
+    if (nombres.some(nombre => nombre.length === 0)) {
+        error.classList.remove("oculto");
+        return;
+    }
+
+    error.classList.add("oculto");
+
+    jugadores = nombres.map((nombre, i) => ({
+        nombre,
+        puntos: 0,
+        color: ["#79a9ff", "#54e0ad", "#c3a0ff"][i]
+    }));
+
+    partida = mezclar([...noticias]);
+    indice = 0;
+
+    inicio.classList.add("oculto");
+    final.classList.add("oculto");
+    juego.classList.remove("oculto");
+
+    mostrarPregunta();
+}
+
+function mostrarMarcador() {
+    const marcador = document.getElementById("marcador-jugadores");
+    marcador.replaceChildren();
+
+    jugadores.forEach((jugador, i) => {
+        const tarjeta = document.createElement("div");
+        tarjeta.className = "jugador-tarjeta";
+        if (i === indice % 3) tarjeta.classList.add("jugador-activo");
+
+        const nombre = document.createElement("span");
+        nombre.className = "jugador-nombre";
+        nombre.textContent = jugador.nombre;
+        nombre.style.color = jugador.color;
+
+        const puntos = document.createElement("strong");
+        puntos.textContent = `${jugador.puntos} pts`;
+
+        tarjeta.append(nombre, puntos);
+        marcador.appendChild(tarjeta);
+    });
+}
+
+function mostrarPregunta() {
+    respondida = false;
+    const noticia = partida[indice];
+    const jugadorActual = jugadores[indice % 3];
+
+    document.getElementById("numero").textContent =
+        `PREGUNTA ${indice + 1} DE ${partida.length}`;
+
+    document.getElementById("turno").textContent =
+        `Turno de ${jugadorActual.nombre}`;
+
+    document.getElementById("progreso").style.width =
+        `${(indice / partida.length) * 100}%`;
+
+    document.getElementById("categoria").textContent = noticia.categoria;
+    document.getElementById("titular").textContent = noticia.titular;
+    document.getElementById("descripcion").textContent = noticia.descripcion;
+
+    mostrarMarcador();
+
+    botones.classList.remove("oculto");
+    resultado.classList.add("oculto");
+
+    document.querySelectorAll(".opcion").forEach(boton => {
+        boton.disabled = false;
+        boton.classList.remove("seleccionado");
+    });
+}
+
+function responder(respuesta) {
+    if (respondida) return;
+    respondida = true;
+
+    const noticia = partida[indice];
+    const jugador = jugadores[indice % 3];
+    const acerto = respuesta === noticia.tipo;
+
+    if (acerto) jugador.puntos++;
+
+    document.querySelectorAll(".opcion").forEach(boton => {
+        boton.disabled = true;
+        if (boton.dataset.respuesta === respuesta) {
+            boton.classList.add("seleccionado");
+        }
+    });
+
+    botones.classList.add("oculto");
+    resultado.classList.remove("oculto");
+
+    const titulo = document.getElementById("resultado-titulo");
+    const texto = document.getElementById("resultado-texto");
+    const fuente = document.getElementById("fuente");
+
+    if (acerto) {
+        titulo.textContent = `✅ ¡Correcto, ${jugador.nombre}! +1 punto`;
+    } else {
+        titulo.textContent = `❌ ¡Incorrecto, ${jugador.nombre}!`;
+    }
+
+    texto.textContent = noticia.tipo === "real"
+        ? noticia.explicacion
+        : "Esta noticia fue inventada para el juego con ayuda de IA. No se basa en un acontecimiento real.";
+
+    if (noticia.tipo === "real" && noticia.fuente) {
+        fuente.href = noticia.fuente;
+        fuente.classList.remove("oculto");
+    } else {
+        fuente.classList.add("oculto");
+        fuente.removeAttribute("href");
+    }
+
+    document.getElementById("progreso").style.width =
+        `${((indice + 1) / partida.length) * 100}%`;
+
+    mostrarMarcador();
+
+    document.getElementById("siguiente").textContent =
+        indice === partida.length - 1
+            ? "VER RESULTADOS FINALES 🏆"
+            : "SIGUIENTE PREGUNTA →";
+}
+
+function siguiente() {
+    indice++;
+
+    if (indice < partida.length) {
+        mostrarPregunta();
+    } else {
+        mostrarFinal();
+    }
+}
+
+function mostrarFinal() {
+    juego.classList.add("oculto");
+    final.classList.remove("oculto");
+
+    const mayorPuntaje = Math.max(...jugadores.map(j => j.puntos));
+    const ganadores = jugadores.filter(j => j.puntos === mayorPuntaje);
+
+    const mensaje = document.getElementById("mensaje-final");
+
+    if (ganadores.length === 1) {
+        mensaje.textContent =
+            ` ¡${ganadores[0].nombre} gana la competencia con ${mayorPuntaje} puntos!`;
+    } else {
+        mensaje.textContent =
+            `🤝 ¡Hay un empate entre ${ganadores.map(j => j.nombre).join(", ")} con ${mayorPuntaje} puntos!`;
+    }
+
+    const lista = document.getElementById("resultados-finales");
+    lista.replaceChildren();
+
+    [...jugadores]
+        .sort((a, b) => b.puntos - a.puntos)
+        .forEach((jugador, i) => {
+            const fila = document.createElement("div");
+            fila.className = "fila-final";
+
+            const puesto = document.createElement("span");
+            puesto.textContent = `${i + 1}°`;
+
+            const nombre = document.createElement("strong");
+            nombre.textContent = jugador.nombre;
+            nombre.style.color = jugador.color;
+
+            const puntos = document.createElement("span");
+            puntos.textContent = `${jugador.puntos}/10`;
+
+            fila.append(puesto, nombre, puntos);
+            lista.appendChild(fila);
+        });
+}
+
+document.getElementById("comenzar").addEventListener("click", comenzar);
+document.getElementById("siguiente").addEventListener("click", siguiente);
+document.getElementById("reiniciar").addEventListener("click", () => {
+    final.classList.add("oculto");
+    inicio.classList.remove("oculto");
+});
+
+document.querySelectorAll(".opcion").forEach(boton => {
+    boton.addEventListener("click", () => {
+        responder(boton.dataset.respuesta);
+    });
+});
+</script>
+</body>
+</html>
